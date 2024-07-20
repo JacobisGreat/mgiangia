@@ -221,7 +221,7 @@ class AmountConfirmationLTCView(View):
             color=3667300
         )
         payment_invoice_embed.add_field(name="Litecoin Address", value="`LYpTa3XsXXeHhfXwuBR2x1uQBQDTVyu6g9`", inline=False)
-        payment_invoice_embed.add_field(name="LTC Amount", value=f"`{total_amount:.6f}`", inline=False)
+        payment_invoice_embed.add_field(name="Litecoin Amount", value=f"`{total_amount:.6f}`", inline=False)
         payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} LTC`", inline=False)
         payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 LTC = ${exchange_rate:.2f} USD")
         payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175267512426975343/litecoin-ltc-badge-crypto-3d-rendering-free-png.png")
@@ -285,7 +285,7 @@ class InvoicePasteButtonView(View):
     @discord.ui.button(label="Paste", style=discord.ButtonStyle.primary, custom_id="invoice_paste")
     async def paste_button(self, interaction: discord.Interaction, button: Button):
         await interaction.response.send_message(f"{self.address}", ephemeral=False)
-        await interaction.followup.send(f"{self.amount:.6f} LTC", ephemeral=False)
+        await interaction.followup.send(f"{self.amount:.6f}", ephemeral=False)
         for item in self.children:
             item.disabled = True
         await interaction.message.edit(view=self)
