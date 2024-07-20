@@ -69,7 +69,6 @@ class AmountConfirmationETHView(View):
             await interaction.message.delete()  # Delete the "Amount Confirmation" embed
             await self.delete_correct_response_messages()
             await self.send_final_confirmation(interaction)
-            await interaction.response.defer()
         else:
             await interaction.response.defer()
 
@@ -91,17 +90,20 @@ class AmountConfirmationETHView(View):
         confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Ethereum`", inline=True)
         await self.channel.send(content=f"{self.sending_user.mention} {self.receiving_user.mention}", embed=confirmed_amount_embed)
 
+        exchange_rate = await self.bot.get_cog('ETHService').fetch_exchange_rate("ethereum")
+        total_amount = float(self.amount) / exchange_rate
+
         payment_invoice_embed = discord.Embed(
             title="📥 Payment Invoice",
             description=f"> {self.sending_user.mention} Please send the funds as part of the deal to the Middleman address specified below.\n> To ensure the validation of your payment, please copy and paste the amount provided.",
             color=3667300
         )
         payment_invoice_embed.add_field(name="Ethereum Address", value="`0x6DcfaA805d8f67cBD7E43aa31bDAE7aB51F8099b`", inline=False)
-        payment_invoice_embed.add_field(name="Ethereum Amount", value=f"`{float(self.amount):.6f} ETH`", inline=False)
+        payment_invoice_embed.add_field(name="Ethereum Amount", value=f"`{total_amount:.6f} ETH`", inline=False)
         payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Ethereum`", inline=False)
-        payment_invoice_embed.set_footer(text="Exchange Rate: 1 ETH = $3423.86 USD")
+        payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 ETH = ${exchange_rate:.2f} USD")
         payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266198217306112/ethereum-eth-badge-5295534-4414739.png")
-        await self.channel.send(content=f"{self.sending_user.mention}", embed=payment_invoice_embed)
+        await self.channel.send(content=f"{self.sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "0x6DcfaA805d8f67cBD7E43aa31bDAE7aB51F8099b", "ETH"))
 
         waiting_transaction_embed = discord.Embed(
             description="<a:Loading:1263637705347305482> Waiting for transaction...",
