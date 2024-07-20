@@ -85,10 +85,9 @@ class AmountConfirmationBTCView(View):
         response_message = await self.send_correct_response_message(interaction)
 
         if self.sending_user.id in self.correct_responses and self.receiving_user.id in self.correct_responses:
-            await interaction.message.delete()  # Delete the "Amount Confirmation" embed
+            await interaction.message.delete()
             await self.delete_correct_response_messages()
             await self.send_final_confirmation(interaction)
-            await interaction.response.defer()
         else:
             await interaction.response.defer()
 
@@ -102,6 +101,11 @@ class AmountConfirmationBTCView(View):
         return response_message
 
     async def send_final_confirmation(self, interaction):
+        # Delete "Amount Confirmation" embed
+        async for message in interaction.channel.history(limit=100):
+            if "Amount Confirmation" in message.embeds[0].title:
+                await message.delete()
+
         confirmed_amount_embed = discord.Embed(
             title="Confirmed Amount",
             description="> The following amount has been confirmed by both parties",
@@ -153,7 +157,7 @@ class AmountConfirmationBTCView(View):
             response = await self.bot.wait_for('message', check=check, timeout=300)
             amount = response.content.strip()
             await self.handle_amount_confirmation(channel, amount)
-        except:
+        except asyncio.TimeoutError:
             await channel.send(embed=discord.Embed(description="You have run out of time!", color=15608876))
 
     async def handle_amount_confirmation(self, channel, amount):
