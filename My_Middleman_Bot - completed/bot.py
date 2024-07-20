@@ -3,6 +3,8 @@ from discord.ext import commands
 import os
 import asyncio
 import json
+from keep_alive import keep_alive
+keepalive()
 
 token = os.getenv("DISCORD_TOKEN")
 intents = discord.Intents.default()
