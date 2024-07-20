@@ -64,5 +64,86 @@ class ETHService(commands.Cog):
         data = response.json()
         return data[crypto]['usd']
 
+class AmountConfirmationETHView(View):
+    def __init__(self, channel, amount, sending_user, receiving_user, bot):
+        super().__init__(timeout=None)
+        self.channel = channel
+        self.amount = amount
+        self.sending_user = sending_user
+        self.receiving_user = receiving_user
+        self.correct_responses = set()
+        self.correct_response_messages = []
+        self.bot = bot
+
+    @discord.ui.button(label="Correct", style=discord.ButtonStyle.success, custom_id="amount_correct_eth")
+    async def correct_button(self, interaction: discord.Interaction, button: Button):
+        if interaction.user.id in self.correct_responses:
+            await interaction.response.send_message("You have already confirmed.", ephemeral=True)
+            return
+
+        self.correct_responses.add(interaction.user.id)
+        response_message = await self.send_correct_response_message(interaction)
+
+        if self.sending_user.id in self.correct_responses and self.receiving_user.id in self.correct_responses:
+            await self.finalize_confirmation(interaction)
+        else:
+            await interaction.response.defer()
+
+    async def send_correct_response_message(self, interaction):
+        response_embed = discord.Embed(
+            description=f"{interaction.user.mention} has responded with **'Correct'**",
+            color=3667300
+        )
+        response_message = await interaction.channel.send(embed=response_embed)
+        self.correct_response_messages.append(response_message)
+        return response_message
+
+    async def finalize_confirmation(self, interaction):
+        await self.delete_correct_response_messages()
+        await interaction.message.delete()  # Delete the "Amount Confirmation" embed
+        await self.send_final_steps(interaction)
+
+    async def send_final_steps(self, interaction):
+        eth_service = self.bot.get_cog("ETHService")
+        if eth_service:
+            await eth_service.send_final_steps(self.channel, self.amount, self.sending_user, self.receiving_user)
+
+    @discord.ui.button(label="Incorrect", style=discord.ButtonStyle.danger, custom_id="amount_incorrect_eth")
+    async def incorrect_button(self, interaction: discord.Interaction, button: Button):
+        await interaction.message.delete()
+        await self.delete_correct_response_messages()
+        await self.send_amount_request_embed(interaction.channel)
+
+    async def delete_correct_response_messages(self):
+        for msg in self.correct_response_messages:
+            await msg.delete()
+
+    async def send_amount_request_embed(self, channel):
+        amount_request_embed = discord.Embed(
+            title="Deal Amount",
+            description="Please state the amount we are expected to receive in USD. (eg. 100.59)",
+            color=3667300
+        )
+        await channel.send(content=f"{self.sending_user.mention}", embed=amount_request_embed)
+
+        def check(m):
+            return m.author == self.sending_user and m.channel == channel
+
+        try:
+            response = await self.bot.wait_for('message', check=check, timeout=300)
+            amount = response.content.strip()
+            await self.handle_amount_confirmation(channel, amount)
+        except asyncio.TimeoutError:
+            await channel.send(embed=discord.Embed(description="You have run out of time!", color=15608876))
+
+    async def handle_amount_confirmation(self, channel, amount):
+        amount_confirmation_embed = discord.Embed(
+            title="Amount Confirmation",
+            description=f"Are we expected to receive {amount} USD?",
+            color=15975211
+        )
+        view = AmountConfirmationETHView(channel, amount, self.sending_user, self.receiving_user, self.bot)
+        await channel.send(embed=amount_confirmation_embed, view=view)
+
 async def setup(bot):
     await bot.add_cog(ETHService(bot))
