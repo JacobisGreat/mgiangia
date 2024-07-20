@@ -152,7 +152,12 @@ class AmountConfirmationBTCView(View):
         try:
             response = await self.bot.wait_for('message', check=check, timeout=300)
             amount = response.content.strip()
-            await self.handle_amount_confirmation(channel, amount)
+            # Ensure amount is a valid decimal number
+            try:
+                amount = float(amount)
+                await self.handle_amount_confirmation(channel, amount)
+            except ValueError:
+                await channel.send(embed=discord.Embed(description="Invalid amount entered. Please enter a valid decimal number.", color=15608876))
         except:
             await channel.send(embed=discord.Embed(description="You have run out of time!", color=15608876))
 
