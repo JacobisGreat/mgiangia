@@ -32,12 +32,12 @@ class BTCService(commands.Cog):
             description="> The following amount has been confirmed by both parties",
             color=3667300
         )
-        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(amount):.2f} Bitcoin`", inline=True)
+        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${amount:.2f} Bitcoin`", inline=True)
         await channel.send(content=f"{sending_user.mention} {receiving_user.mention}", embed=confirmed_amount_embed)
 
     async def send_payment_invoice(self, channel, amount, sending_user):
         exchange_rate = await self.fetch_exchange_rate("bitcoin")
-        total_amount = float(amount) / exchange_rate
+        total_amount = amount / exchange_rate
 
         payment_invoice_embed = discord.Embed(
             title="📥 Payment Invoice",
@@ -46,7 +46,7 @@ class BTCService(commands.Cog):
         )
         payment_invoice_embed.add_field(name="Bitcoin Address", value="`bc1qdrlc5ljk3flz6nnwkk7rahskxxfqk5waye54cf`", inline=False)
         payment_invoice_embed.add_field(name="Bitcoin Amount", value=f"`{total_amount:.6f} BTC`", inline=False)
-        payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(amount):.2f} Bitcoin`", inline=False)
+        payment_invoice_embed.add_field(name="USD Amount", value=f"`${amount:.2f} Bitcoin`", inline=False)
         payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 BTC = ${exchange_rate:.2f} USD")
         payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266184933937212/bitcoin-btc-badge-5295535-4414740.png")
         await channel.send(content=f"{sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "bc1qdrlc5ljk3flz6nnwkk7rahskxxfqk5waye54cf"))
@@ -97,11 +97,11 @@ class AmountConfirmationBTCView(View):
             description="> The following amount has been confirmed by both parties",
             color=3667300
         )
-        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Bitcoin`", inline=True)
+        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${self.amount:.2f} Bitcoin`", inline=True)
         await self.channel.send(content=f"{self.sending_user.mention} {self.receiving_user.mention}", embed=confirmed_amount_embed)
 
         exchange_rate = await self.fetch_exchange_rate("bitcoin")
-        total_amount = float(self.amount) / exchange_rate
+        total_amount = self.amount / exchange_rate
 
         payment_invoice_embed = discord.Embed(
             title="📥 Payment Invoice",
@@ -110,7 +110,7 @@ class AmountConfirmationBTCView(View):
         )
         payment_invoice_embed.add_field(name="Bitcoin Address", value="`bc1qdrlc5ljk3flz6nnwkk7rahskxxfqk5waye54cf`", inline=False)
         payment_invoice_embed.add_field(name="Bitcoin Amount", value=f"`{total_amount:.6f} BTC`", inline=False)
-        payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Bitcoin`", inline=False)
+        payment_invoice_embed.add_field(name="USD Amount", value=f"`${self.amount:.2f} Bitcoin`", inline=False)
         payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 BTC = ${exchange_rate:.2f} USD")
         payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266184933937212/bitcoin-btc-badge-5295535-4414740.png")
         await self.channel.send(content=f"{self.sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "bc1qdrlc5ljk3flz6nnwkk7rahskxxfqk5waye54cf"))
@@ -158,7 +158,7 @@ class AmountConfirmationBTCView(View):
     async def handle_amount_confirmation(self, channel, amount):
         amount_confirmation_embed = discord.Embed(
             title="Amount Confirmation",
-            description=f"Are we expected to receive {amount} USD?",
+            description=f"Are we expected to receive {amount:.2f} USD?",
             color=15975211
         )
         view = AmountConfirmationBTCView(channel, amount, self.sending_user, self.receiving_user, self.bot)
