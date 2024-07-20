@@ -221,7 +221,7 @@ class AmountConfirmationETHView(View):
             color=3667300
         )
         payment_invoice_embed.add_field(name="Ethereum Address", value="`0x6DcfaA805d8f67cBD7E43aa31bDAE7aB51F8099b`", inline=False)
-        payment_invoice_embed.add_field(name="ETH Amount", value=f"`{total_amount:.6f}`", inline=False)
+        payment_invoice_embed.add_field(name="Ethereum Amount", value=f"`{total_amount:.6f}`", inline=False)
         payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} ETH`", inline=False)
         payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 ETH = ${exchange_rate:.2f} USD")
         payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266198217306112/ethereum-eth-badge-5295534-4414739.png")
@@ -285,7 +285,7 @@ class InvoicePasteButtonView(View):
     @discord.ui.button(label="Paste", style=discord.ButtonStyle.primary, custom_id="invoice_paste")
     async def paste_button(self, interaction: discord.Interaction, button: Button):
         await interaction.response.send_message(f"{self.address}", ephemeral=False)
-        await interaction.followup.send(f"{self.amount:.6f} ETH", ephemeral=False)
+        await interaction.followup.send(f"{self.amount:.6f}", ephemeral=False)
         for item in self.children:
             item.disabled = True
         await interaction.message.edit(view=self)
