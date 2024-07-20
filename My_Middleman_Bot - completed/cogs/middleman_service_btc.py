@@ -212,7 +212,7 @@ class AmountConfirmationBTCView(View):
             description="> The following amount has been confirmed by both parties",
             color=3667300
         )
-        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} BTC`", inline=True)
+        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Bitcoin`", inline=True)
         await self.channel.send(content=f"{self.sending_user.mention} {self.receiving_user.mention}", embed=confirmed_amount_embed)
 
         payment_invoice_embed = discord.Embed(
@@ -221,8 +221,8 @@ class AmountConfirmationBTCView(View):
             color=3667300
         )
         payment_invoice_embed.add_field(name="Bitcoin Address", value="`bc1qdrlc5ljk3flz6nnwkk7rahskxxfqk5waye54cf`", inline=False)
-        payment_invoice_embed.add_field(name="Bitcoin Amount", value=f"`{total_amount:.6f}`", inline=False)
-        payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} BTC`", inline=False)
+        payment_invoice_embed.add_field(name="Bitcoin Amount", value=f"`{total_amount:.6f} BTC`", inline=False)
+        payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Bitcoin`", inline=False)
         payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 BTC = ${exchange_rate:.2f} USD")
         payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266184933937212/bitcoin-btc-badge-5295535-4414740.png")
         await self.channel.send(content=f"{self.sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "bc1qdrlc5ljk3flz6nnwkk7rahskxxfqk5waye54cf"))
@@ -285,7 +285,7 @@ class InvoicePasteButtonView(View):
     @discord.ui.button(label="Paste", style=discord.ButtonStyle.primary, custom_id="invoice_paste")
     async def paste_button(self, interaction: discord.Interaction, button: Button):
         await interaction.response.send_message(f"{self.address}", ephemeral=False)
-        await interaction.followup.send(f"{self.amount:.6f}", ephemeral=False)
+        await interaction.followup.send(f"{self.amount:.6f} BTC", ephemeral=False)
         for item in self.children:
             item.disabled = True
         await interaction.message.edit(view=self)
