@@ -3,7 +3,8 @@ from discord.ext import commands
 import os
 import asyncio
 import json
-
+from keep_alive import keep_alive
+keep_alive()
 token = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 intents.messages = True
