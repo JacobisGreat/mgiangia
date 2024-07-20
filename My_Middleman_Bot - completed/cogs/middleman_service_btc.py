@@ -285,7 +285,7 @@ class InvoicePasteButtonView(View):
     @discord.ui.button(label="Paste", style=discord.ButtonStyle.primary, custom_id="invoice_paste")
     async def paste_button(self, interaction: discord.Interaction, button: Button):
         await interaction.response.send_message(f"{self.address}", ephemeral=False)
-        await interaction.followup.send(f"{self.amount:.6f} BTC", ephemeral=False)
+        await interaction.followup.send(f"{self.amount:.6f}", ephemeral=False)
         for item in self.children:
             item.disabled = True
         await interaction.message.edit(view=self)
