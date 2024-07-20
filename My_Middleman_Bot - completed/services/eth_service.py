@@ -32,7 +32,7 @@ class ETHService(commands.Cog):
             description="> The following amount has been confirmed by both parties",
             color=3667300
         )
-        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(amount):.2f} Ethereum`", inline=True)
+        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(amount):.2f} ETH`", inline=True)
         await channel.send(content=f"{sending_user.mention} {receiving_user.mention}", embed=confirmed_amount_embed)
 
     async def send_payment_invoice(self, channel, amount, sending_user):
@@ -44,12 +44,12 @@ class ETHService(commands.Cog):
             description=f"> {sending_user.mention} Please send the funds as part of the deal to the Middleman address specified below.\n> To ensure the validation of your payment, please copy and paste the amount provided.",
             color=3667300
         )
-        payment_invoice_embed.add_field(name="Ethereum Address", value="`0xYourEthereumAddressHere`", inline=False)
-        payment_invoice_embed.add_field(name="Ethereum Amount", value=f"`{total_amount:.6f} ETH`", inline=False)
-        payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(amount):.2f} Ethereum`", inline=False)
+        payment_invoice_embed.add_field(name="Ethereum Address", value="`0x6DcfaA805d8f67cBD7E43aa31bDAE7aB51F8099b`", inline=False)
+        payment_invoice_embed.add_field(name="Ethereum Amount", value=f"`{total_amount:.6f}`", inline=False)
+        payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(amount):.2f} ETH`", inline=False)
         payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 ETH = ${exchange_rate:.2f} USD")
         payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266184933937212/ethereum.png")
-        await channel.send(content=f"{sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "0xYourEthereumAddressHere"))
+        await channel.send(content=f"{sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "0x6DcfaA805d8f67cBD7E43aa31bDAE7aB51F8099b"))
 
     async def send_waiting_transaction(self, channel):
         waiting_transaction_embed = discord.Embed(
