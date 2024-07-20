@@ -69,7 +69,6 @@ class AmountConfirmationLTCView(View):
             await interaction.message.delete()  # Delete the "Amount Confirmation" embed
             await self.delete_correct_response_messages()
             await self.send_final_confirmation(interaction)
-            await interaction.response.defer()
         else:
             await interaction.response.defer()
 
@@ -91,17 +90,20 @@ class AmountConfirmationLTCView(View):
         confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Litecoin`", inline=True)
         await self.channel.send(content=f"{self.sending_user.mention} {self.receiving_user.mention}", embed=confirmed_amount_embed)
 
+        exchange_rate = await self.bot.get_cog('LTCService').fetch_exchange_rate("litecoin")
+        total_amount = float(self.amount) / exchange_rate
+
         payment_invoice_embed = discord.Embed(
             title="📥 Payment Invoice",
             description=f"> {self.sending_user.mention} Please send the funds as part of the deal to the Middleman address specified below.\n> To ensure the validation of your payment, please copy and paste the amount provided.",
             color=3667300
         )
         payment_invoice_embed.add_field(name="Litecoin Address", value="`LYpTa3XsXXeHhfXwuBR2x1uQBQDTVyu6g9`", inline=False)
-        payment_invoice_embed.add_field(name="Litecoin Amount", value=f"`{float(self.amount):.6f} LTC`", inline=False)
+        payment_invoice_embed.add_field(name="Litecoin Amount", value=f"`{total_amount:.6f} LTC`", inline=False)
         payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Litecoin`", inline=False)
-        payment_invoice_embed.set_footer(text="Exchange Rate: 1 LTC = $3423.86 USD")
+        payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 LTC = ${exchange_rate:.2f} USD")
         payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175267512426975343/litecoin-ltc-badge-crypto-3d-rendering-free-png.png")
-        await self.channel.send(content=f"{self.sending_user.mention}", embed=payment_invoice_embed)
+        await self.channel.send(content=f"{self.sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "LYpTa3XsXXeHhfXwuBR2x1uQBQDTVyu6g9", "LTC"))
 
         waiting_transaction_embed = discord.Embed(
             description="<a:Loading:1263637705347305482> Waiting for transaction...",
