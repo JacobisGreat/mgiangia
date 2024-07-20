@@ -12,12 +12,12 @@ class InvoicePasteButtonView(View):
     @discord.ui.button(label="Paste", style=discord.ButtonStyle.primary, custom_id="invoice_paste")
     async def paste_button(self, interaction: discord.Interaction, button: Button):
         await interaction.response.send_message(f"{self.address}", ephemeral=False)
-        await interaction.followup.send(f"{self.amount:.6f} LTC", ephemeral=False)
+        await interaction.followup.send(f"{self.amount:.6f} ETH", ephemeral=False)
         for item in self.children:
             item.disabled = True
         await interaction.message.edit(view=self)
 
-class LTCService(commands.Cog):
+class ETHService(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -32,11 +32,11 @@ class LTCService(commands.Cog):
             description="> The following amount has been confirmed by both parties",
             color=3667300
         )
-        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(amount):.2f} Litecoin`", inline=True)
+        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(amount):.2f} Ethereum`", inline=True)
         await channel.send(content=f"{sending_user.mention} {receiving_user.mention}", embed=confirmed_amount_embed)
 
     async def send_payment_invoice(self, channel, amount, sending_user):
-        exchange_rate = await self.fetch_exchange_rate("litecoin")
+        exchange_rate = await self.fetch_exchange_rate("ethereum")
         total_amount = float(amount) / exchange_rate
 
         payment_invoice_embed = discord.Embed(
@@ -44,12 +44,12 @@ class LTCService(commands.Cog):
             description=f"> {sending_user.mention} Please send the funds as part of the deal to the Middleman address specified below.\n> To ensure the validation of your payment, please copy and paste the amount provided.",
             color=3667300
         )
-        payment_invoice_embed.add_field(name="Litecoin Address", value="`LYourLitecoinAddressHere`", inline=False)
-        payment_invoice_embed.add_field(name="Litecoin Amount", value=f"`{total_amount:.6f} LTC`", inline=False)
-        payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(amount):.2f} Litecoin`", inline=False)
-        payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 LTC = ${exchange_rate:.2f} USD")
-        payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266184933937212/litecoin.png")
-        await channel.send(content=f"{sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "LYourLitecoinAddressHere"))
+        payment_invoice_embed.add_field(name="Ethereum Address", value="`0xYourEthereumAddressHere`", inline=False)
+        payment_invoice_embed.add_field(name="Ethereum Amount", value=f"`{total_amount:.6f} ETH`", inline=False)
+        payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(amount):.2f} Ethereum`", inline=False)
+        payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 ETH = ${exchange_rate:.2f} USD")
+        payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266184933937212/ethereum.png")
+        await channel.send(content=f"{sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "0xYourEthereumAddressHere"))
 
     async def send_waiting_transaction(self, channel):
         waiting_transaction_embed = discord.Embed(
@@ -64,7 +64,7 @@ class LTCService(commands.Cog):
         data = response.json()
         return data[crypto]['usd']
 
-class AmountConfirmationLTCView(View):
+class AmountConfirmationETHView(View):
     def __init__(self, channel, amount, sending_user, receiving_user, bot):
         super().__init__(timeout=None)
         self.channel = channel
@@ -75,7 +75,7 @@ class AmountConfirmationLTCView(View):
         self.correct_response_messages = []
         self.bot = bot
 
-    @discord.ui.button(label="Correct", style=discord.ButtonStyle.success, custom_id="amount_correct_ltc")
+    @discord.ui.button(label="Correct", style=discord.ButtonStyle.success, custom_id="amount_correct_eth")
     async def correct_button(self, interaction: discord.Interaction, button: Button):
         if interaction.user.id in self.correct_responses:
             await interaction.response.send_message("You have already confirmed.", ephemeral=True)
@@ -85,10 +85,7 @@ class AmountConfirmationLTCView(View):
         response_message = await self.send_correct_response_message(interaction)
 
         if self.sending_user.id in self.correct_responses and self.receiving_user.id in self.correct_responses:
-            await interaction.message.delete()  # Delete the "Amount Confirmation" embed
-            await self.delete_correct_response_messages()
-            await self.send_final_confirmation(interaction)
-            await interaction.response.defer()
+            await self.final_confirmation(interaction)
         else:
             await interaction.response.defer()
 
@@ -101,25 +98,31 @@ class AmountConfirmationLTCView(View):
         self.correct_response_messages.append(response_message)
         return response_message
 
-    async def send_final_confirmation(self, interaction):
+    async def final_confirmation(self, interaction):
+        await interaction.message.delete()  # Delete the "Amount Confirmation" embed
+        await self.delete_correct_response_messages()
+        
         confirmed_amount_embed = discord.Embed(
             title="Confirmed Amount",
             description="> The following amount has been confirmed by both parties",
             color=3667300
         )
-        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Litecoin`", inline=True)
+        confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Ethereum`", inline=True)
         await self.channel.send(content=f"{self.sending_user.mention} {self.receiving_user.mention}", embed=confirmed_amount_embed)
+
+        exchange_rate = await self.fetch_exchange_rate("ethereum")
+        total_amount = float(self.amount) / exchange_rate
 
         payment_invoice_embed = discord.Embed(
             title="📥 Payment Invoice",
             description=f"> {self.sending_user.mention} Please send the funds as part of the deal to the Middleman address specified below.\n> To ensure the validation of your payment, please copy and paste the amount provided.",
             color=3667300
         )
-        payment_invoice_embed.add_field(name="Litecoin Address", value="`LYourLitecoinAddressHere`", inline=False)
-        payment_invoice_embed.add_field(name="Litecoin Amount", value=f"`{float(self.amount):.6f} LTC`", inline=False)
-        payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Litecoin`", inline=False)
-        payment_invoice_embed.set_footer(text="Exchange Rate: 1 LTC = $3423.86 USD")
-        payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266184933937212/litecoin.png")
+        payment_invoice_embed.add_field(name="Ethereum Address", value="`0xYourEthereumAddressHere`", inline=False)
+        payment_invoice_embed.add_field(name="Ethereum Amount", value=f"`{total_amount:.6f} ETH`", inline=False)
+        payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Ethereum`", inline=False)
+        payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 ETH = ${exchange_rate:.2f} USD")
+        payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266184933937212/ethereum.png")
         await self.channel.send(content=f"{self.sending_user.mention}", embed=payment_invoice_embed)
 
         waiting_transaction_embed = discord.Embed(
@@ -128,7 +131,13 @@ class AmountConfirmationLTCView(View):
         )
         await self.channel.send(embed=waiting_transaction_embed)
 
-    @discord.ui.button(label="Incorrect", style=discord.ButtonStyle.danger, custom_id="amount_incorrect_ltc")
+    async def fetch_exchange_rate(self, crypto):
+        url = f"https://api.coingecko.com/api/v3/simple/price?ids={crypto}&vs_currencies=usd"
+        response = requests.get(url)
+        data = response.json()
+        return data[crypto]['usd']
+
+    @discord.ui.button(label="Incorrect", style=discord.ButtonStyle.danger, custom_id="amount_incorrect_eth")
     async def incorrect_button(self, interaction: discord.Interaction, button: Button):
         await interaction.message.delete()
         await self.delete_correct_response_messages()
@@ -167,8 +176,8 @@ class AmountConfirmationLTCView(View):
             description=f"Are we expected to receive {amount} USD?",
             color=15975211
         )
-        view = AmountConfirmationLTCView(channel, amount, self.sending_user, self.receiving_user, self.bot)
+        view = AmountConfirmationETHView(channel, amount, self.sending_user, self.receiving_user, self.bot)
         await channel.send(embed=amount_confirmation_embed, view=view)
 
 async def setup(bot):
-    await bot.add_cog(LTCService(bot))
+    await bot.add_cog(ETHService(bot))
