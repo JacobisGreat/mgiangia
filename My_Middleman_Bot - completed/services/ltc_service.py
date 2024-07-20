@@ -44,12 +44,12 @@ class LTCService(commands.Cog):
             description=f"> {sending_user.mention} Please send the funds as part of the deal to the Middleman address specified below.\n> To ensure the validation of your payment, please copy and paste the amount provided.",
             color=3667300
         )
-        payment_invoice_embed.add_field(name="Litecoin Address", value="`LYpTa3XsXXeHhfXwuBR2x1uQBQDTVyu6g9`", inline=False)
+        payment_invoice_embed.add_field(name="Litecoin Address", value="`LYourLitecoinAddressHere`", inline=False)
         payment_invoice_embed.add_field(name="Litecoin Amount", value=f"`{total_amount:.6f} LTC`", inline=False)
         payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(amount):.2f} Litecoin`", inline=False)
         payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 LTC = ${exchange_rate:.2f} USD")
-        payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175267512426975343/litecoin-ltc-badge-crypto-3d-rendering-free-png.png")
-        await channel.send(content=f"{sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "LYpTa3XsXXeHhfXwuBR2x1uQBQDTVyu6g9"))
+        payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266184933937212/litecoin.png")
+        await channel.send(content=f"{sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "LYourLitecoinAddressHere"))
 
     async def send_waiting_transaction(self, channel):
         waiting_transaction_embed = discord.Embed(
@@ -115,11 +115,11 @@ class AmountConfirmationLTCView(View):
             description=f"> {self.sending_user.mention} Please send the funds as part of the deal to the Middleman address specified below.\n> To ensure the validation of your payment, please copy and paste the amount provided.",
             color=3667300
         )
-        payment_invoice_embed.add_field(name="Litecoin Address", value="`LYpTa3XsXXeHhfXwuBR2x1uQBQDTVyu6g9`", inline=False)
+        payment_invoice_embed.add_field(name="Litecoin Address", value="`LYourLitecoinAddressHere`", inline=False)
         payment_invoice_embed.add_field(name="Litecoin Amount", value=f"`{float(self.amount):.6f} LTC`", inline=False)
         payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Litecoin`", inline=False)
         payment_invoice_embed.set_footer(text="Exchange Rate: 1 LTC = $3423.86 USD")
-        payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175267512426975343/litecoin-ltc-badge-crypto-3d-rendering-free-png.png")
+        payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266184933937212/litecoin.png")
         await self.channel.send(content=f"{self.sending_user.mention}", embed=payment_invoice_embed)
 
         waiting_transaction_embed = discord.Embed(
@@ -152,7 +152,12 @@ class AmountConfirmationLTCView(View):
         try:
             response = await self.bot.wait_for('message', check=check, timeout=300)
             amount = response.content.strip()
-            await self.handle_amount_confirmation(channel, amount)
+            # Ensure amount is a valid decimal number
+            try:
+                amount = float(amount)
+                await self.handle_amount_confirmation(channel, amount)
+            except ValueError:
+                await channel.send(embed=discord.Embed(description="Invalid amount entered. Please enter a valid decimal number.", color=15608876))
         except:
             await channel.send(embed=discord.Embed(description="You have run out of time!", color=15608876))
 
