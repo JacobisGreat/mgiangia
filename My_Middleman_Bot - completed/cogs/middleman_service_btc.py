@@ -46,7 +46,7 @@ class RoleSelectionBTCView(View):
         embed = self.last_embed_message.embeds[0]
         embed.set_field_at(0, name="Sending Bitcoin", value=self.sending_user.mention if self.sending_user else "`None`", inline=True)
         embed.set_field_at(1, name="Receiving Bitcoin", value=self.receiving_user.mention if self.receiving_user else "`None`", inline=True)
-        await self.send_with_retries(self.last_embed_message.edit, embed=embed)
+        await self.last_embed_message.edit(embed=embed)
 
     async def check_roles_complete(self):
         if self.sending_user and self.receiving_user:
@@ -59,22 +59,12 @@ class RoleSelectionBTCView(View):
             confirmation_embed.add_field(name="Receiving Bitcoin", value=self.receiving_user.mention, inline=True)
             await self.disable_buttons()
             view = ConfirmationBTCView(self.last_embed_message, self.sending_user, self.receiving_user, self.bot)
-            await self.send_with_retries(self.last_embed_message.channel.send, embed=confirmation_embed, view=view)
+            await self.last_embed_message.channel.send(embed=confirmation_embed, view=view)
 
     async def disable_buttons(self):
         for item in self.children:
             item.disabled = True
-        await self.send_with_retries(self.last_embed_message.edit, view=self)
-
-    async def send_with_retries(self, send_func, *args, **kwargs):
-        retries = 3
-        for attempt in range(retries):
-            try:
-                return await send_func(*args, **kwargs)
-            except Exception as e:
-                if attempt == retries - 1:
-                    raise e
-                await asyncio.sleep(2 ** attempt)
+        await self.last_embed_message.edit(view=self)
 
 class ConfirmationBTCView(View):
     def __init__(self, role_embed_message, sending_user, receiving_user, bot):
@@ -114,7 +104,7 @@ class ConfirmationBTCView(View):
             description=f"{interaction.user.mention} has responded with **'Correct'**",
             color=3667300
         )
-        response_message = await self.send_with_retries(interaction.channel.send, embed=response_embed)
+        response_message = await interaction.channel.send(embed=response_embed)
         self.correct_response_messages.append(response_message)
         return response_message
 
@@ -130,7 +120,7 @@ class ConfirmationBTCView(View):
         )
         confirmation_embed.add_field(name="Sending Bitcoin", value=self.sending_user.mention, inline=True)
         confirmation_embed.add_field(name="Receiving Bitcoin", value=self.receiving_user.mention, inline=True)
-        await self.send_with_retries(interaction.channel.send, embed=confirmation_embed)
+        await interaction.channel.send(embed=confirmation_embed)
 
     async def send_amount_request_embed(self, channel):
         amount_request_embed = discord.Embed(
@@ -138,7 +128,7 @@ class ConfirmationBTCView(View):
             description="Please state the amount we are expected to receive in USD. (eg. 100.59)",
             color=3667300
         )
-        await self.send_with_retries(channel.send, content=f"{self.sending_user.mention}", embed=amount_request_embed)
+        await channel.send(content=f"{self.sending_user.mention}", embed=amount_request_embed)
 
         def check(m):
             return m.author == self.sending_user and m.channel == channel
@@ -148,7 +138,7 @@ class ConfirmationBTCView(View):
             amount = response.content.strip()
             await self.handle_amount_confirmation(channel, amount)
         except asyncio.TimeoutError:
-            await self.send_with_retries(channel.send, embed=discord.Embed(description="You have run out of time!", color=15608876))
+            await channel.send(embed=discord.Embed(description="You have run out of time!", color=15608876))
 
     async def handle_amount_confirmation(self, channel, amount):
         amount_confirmation_embed = discord.Embed(
@@ -157,7 +147,7 @@ class ConfirmationBTCView(View):
             color=15975211
         )
         view = AmountConfirmationBTCView(channel, amount, self.sending_user, self.receiving_user, self.bot)
-        await self.send_with_retries(channel.send, embed=amount_confirmation_embed, view=view)
+        await channel.send(embed=amount_confirmation_embed, view=view)
 
     async def delete_correct_response_messages(self):
         for msg in self.correct_response_messages:
@@ -171,19 +161,9 @@ class ConfirmationBTCView(View):
         )
         new_embed.add_field(name="Sending Bitcoin", value="`None`", inline=True)
         new_embed.add_field(name="Receiving Bitcoin", value="`None`", inline=True)
-        new_message = await self.send_with_retries(channel.send, embed=new_embed)
+        new_message = await channel.send(embed=new_embed)
         new_view = RoleSelectionBTCView(last_embed_message=new_message, bot=self.bot)
-        await self.send_with_retries(new_message.edit, view=new_view)
-
-    async def send_with_retries(self, send_func, *args, **kwargs):
-        retries = 3
-        for attempt in range(retries):
-            try:
-                return await send_func(*args, **kwargs)
-            except Exception as e:
-                if attempt == retries - 1:
-                    raise e
-                await asyncio.sleep(2 ** attempt)
+        await new_message.edit(view=new_view)
 
 class AmountConfirmationBTCView(View):
     def __init__(self, channel, amount, sending_user, receiving_user, bot):
@@ -217,7 +197,7 @@ class AmountConfirmationBTCView(View):
             description=f"{interaction.user.mention} has responded with **'Correct'**",
             color=3667300
         )
-        response_message = await self.send_with_retries(interaction.channel.send, embed=response_embed)
+        response_message = await interaction.channel.send(embed=response_embed)
         self.correct_response_messages.append(response_message)
         return response_message
 
@@ -233,7 +213,7 @@ class AmountConfirmationBTCView(View):
             color=3667300
         )
         confirmed_amount_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Bitcoin`", inline=True)
-        await self.send_with_retries(self.channel.send, content=f"{self.sending_user.mention} {self.receiving_user.mention}", embed=confirmed_amount_embed)
+        await self.channel.send(content=f"{self.sending_user.mention} {self.receiving_user.mention}", embed=confirmed_amount_embed)
 
         payment_invoice_embed = discord.Embed(
             title="📥 Payment Invoice",
@@ -245,13 +225,13 @@ class AmountConfirmationBTCView(View):
         payment_invoice_embed.add_field(name="USD Amount", value=f"`${float(self.amount):.2f} Bitcoin`", inline=False)
         payment_invoice_embed.set_footer(text=f"Exchange Rate: 1 BTC = ${exchange_rate:.2f} USD")
         payment_invoice_embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1175266184933937212/bitcoin-btc-badge-5295535-4414740.png")
-        await self.send_with_retries(self.channel.send, content=f"{self.sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "bc1qdrlc5ljk3flz6nnwkk7rahskxxfqk5waye54cf"))
+        await self.channel.send(content=f"{self.sending_user.mention}", embed=payment_invoice_embed, view=InvoicePasteButtonView(total_amount, "bc1qdrlc5ljk3flz6nnwkk7rahskxxfqk5waye54cf"))
 
         waiting_transaction_embed = discord.Embed(
             description="<a:Loading:1263637705347305482> Waiting for transaction...",
             color=14737371
         )
-        await self.send_with_retries(self.channel.send, embed=waiting_transaction_embed)
+        await self.channel.send(embed=waiting_transaction_embed)
 
     async def fetch_exchange_rate(self, crypto):
         url = f"https://api.coingecko.com/api/v3/simple/price?ids={crypto}&vs_currencies=usd"
@@ -275,7 +255,7 @@ class AmountConfirmationBTCView(View):
             description="Please state the amount we are expected to receive in USD. (eg. 100.59)",
             color=3667300
         )
-        await self.send_with_retries(channel.send, content=f"{self.sending_user.mention}", embed=amount_request_embed)
+        await channel.send(content=f"{self.sending_user.mention}", embed=amount_request_embed)
 
         def check(m):
             return m.author == self.sending_user and m.channel == channel
@@ -285,7 +265,7 @@ class AmountConfirmationBTCView(View):
             amount = response.content.strip()
             await self.handle_amount_confirmation(channel, amount)
         except asyncio.TimeoutError:
-            await self.send_with_retries(channel.send, embed=discord.Embed(description="You have run out of time!", color=15608876))
+            await channel.send(embed=discord.Embed(description="You have run out of time!", color=15608876))
 
     async def handle_amount_confirmation(self, channel, amount):
         amount_confirmation_embed = discord.Embed(
@@ -294,7 +274,7 @@ class AmountConfirmationBTCView(View):
             color=15975211
         )
         view = AmountConfirmationBTCView(channel, amount, self.sending_user, self.receiving_user, self.bot)
-        await self.send_with_retries(channel.send, embed=amount_confirmation_embed, view=view)
+        await channel.send(embed=amount_confirmation_embed, view=view)
 
 class InvoicePasteButtonView(View):
     def __init__(self, amount, address):
@@ -327,14 +307,14 @@ class MiddlemanServiceBTC(commands.Cog):
             color=3667300
         )
         embed1.set_thumbnail(url="https://cdn.discordapp.com/attachments/1153826027714379866/1157874378344779886/crypto.png?ex=669a7f4c&is=66992dcc&hm=9030faeb2ef0783a104d2f49a25a32408b97cda0a37a97dad91416475c177e23&")
-        await self.send_with_retries(channel.send, embed=embed1)
+        await channel.send(embed=embed1)
 
         embed2 = discord.Embed(
             description="**Please ensure all conversations related to the deal are done within this ticket. Failure to do so may put you at risk of being scammed.**\n\n<a:Alert:1263604204216389746> **Our bot will NEVER dm you! Please report any suspicious DMs to Staff.**",
             color=15608876
         )
         embed2.set_author(name="Please Read!", icon_url="https://cdn.discordapp.com/attachments/1153826027714379866/1187997184688398366/790938.png?ex=669aa8d8&is=66995758&hm=811186eaa7808f66177494f07a921d588ab5e612ab007cc89f8c44a0e2f7d809&")
-        await self.send_with_retries(channel.send, embed=embed2)
+        await channel.send(embed=embed2)
 
         embed3 = discord.Embed(
             title="Role Selection",
@@ -343,20 +323,10 @@ class MiddlemanServiceBTC(commands.Cog):
         )
         embed3.add_field(name="Sending Bitcoin", value="`None`", inline=True)
         embed3.add_field(name="Receiving Bitcoin", value="`None`", inline=True)
-        message = await self.send_with_retries(channel.send, embed=embed3)
+        message = await channel.send(embed=embed3)
 
         view = RoleSelectionBTCView(last_embed_message=message, bot=self.bot)
-        await self.send_with_retries(message.edit, view=view)
-
-    async def send_with_retries(self, send_func, *args, **kwargs):
-        retries = 3
-        for attempt in range(retries):
-            try:
-                return await send_func(*args, **kwargs)
-            except Exception as e:
-                if attempt == retries - 1:
-                    raise e
-                await asyncio.sleep(2 ** attempt)
+        await message.edit(view=view)
 
 async def setup(bot):
     await bot.add_cog(MiddlemanServiceBTC(bot))
