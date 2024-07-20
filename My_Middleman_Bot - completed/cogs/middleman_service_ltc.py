@@ -329,4 +329,4 @@ class MiddlemanServiceLTC(commands.Cog):
         await message.edit(view=view)
 
 async def setup(bot):
-    await bot.add_cog(MiddlemanServiceLTC(bot))
+    await bot.add_cog(MiddlemanServiceLTC(bot)
