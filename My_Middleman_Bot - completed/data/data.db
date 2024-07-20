@@ -1,0 +1,24 @@
+import sqlite3
+
+conn = sqlite3.connect('data/tickets.db')
+c = conn.cursor()
+
+# Create table
+c.execute('''
+    CREATE TABLE IF NOT EXISTS ticket_numbers (
+        id INTEGER PRIMARY KEY,
+        cryptocurrency TEXT UNIQUE,
+        ticket_number INTEGER
+    )
+''')
+
+# Insert initial values
+initial_values = [
+    ('bitcoin', 800),
+    ('litecoin', 4180),
+    ('ethereum', 204)
+]
+
+c.executemany('INSERT OR IGNORE INTO ticket_numbers (cryptocurrency, ticket_number) VALUES (?, ?)', initial_values)
+conn.commit()
+conn.close()
