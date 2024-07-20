@@ -17,7 +17,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 DESTINATION_CHANNEL_ID = 1264064226385985587
 
 # List of allowed user IDs
-ALLOWED_USER_IDS = [1249852943943864340, 234567890123456789]  # Replace with actual user IDs
+ALLOWED_USER_IDS = [1252724204676186163, 234567890123456789]  # Replace with actual user IDs
 
 async def load_extensions():
     for filename in os.listdir('./cogs'):
