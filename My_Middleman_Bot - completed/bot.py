@@ -4,7 +4,7 @@ import os
 import asyncio
 import json
 from keep_alive import keep_alive
-keepalive()
+keep_alive()
 
 token = os.getenv("DISCORD_TOKEN")
 intents = discord.Intents.default()
