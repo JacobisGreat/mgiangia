@@ -8,6 +8,8 @@ intents.messages = True
 intents.guilds = True
 intents.message_content = True
 intents.members = True  # Enable member intent
+from keep_alive import keep_alive
+keep_alive()
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
